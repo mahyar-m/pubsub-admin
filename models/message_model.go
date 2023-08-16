@@ -2,9 +2,11 @@ package models
 
 import (
 	"database/sql"
+	"encoding/json"
 
 	"example/pubsub_manager/db"
 
+	"cloud.google.com/go/pubsub"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -50,4 +52,34 @@ func (messageModel *MessageModel) Select(config db.MysqlConfig, selectQuery stri
 	}
 
 	return messageRows, nil
+}
+
+func (messageModel *MessageModel) Insert(config db.MysqlConfig, subID string, msg *pubsub.Message) error {
+	db, err := sql.Open("mysql", config.GetConnString())
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	err = db.Ping()
+	if err != nil {
+		return err
+	}
+
+	stmtIns, err := db.Prepare("INSERT INTO message (id, sub, data, attribute, publish_time, delivery_attempt, ordering_key) VALUES( ?, ?, ?, ?, ?, ?, ? )") // ? = placeholder
+	if err != nil {
+		return err
+	}
+	defer stmtIns.Close()
+
+	var attributes []byte = nil
+	if msg.Attributes != nil {
+		attributes, _ = json.Marshal(msg.Attributes)
+	}
+	_, err = stmtIns.Exec(msg.ID, subID, msg.Data, attributes, msg.PublishTime, msg.DeliveryAttempt, msg.OrderingKey)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
