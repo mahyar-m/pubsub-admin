@@ -5,12 +5,13 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 	"os"
 	"sync/atomic"
 	"time"
+
+	"example/pubsub_manager/handlers"
 
 	"cloud.google.com/go/pubsub"
 	_ "github.com/go-sql-driver/mysql"
@@ -50,7 +51,7 @@ func main() {
 		fmt.Println("Error:", err)
 	}
 
-	http.HandleFunc("/", mainPageHandler)
+	http.HandleFunc("/", (&handlers.SpaHandler{}).Handle)
 	http.HandleFunc("/sub", listSubHandler)
 	http.HandleFunc("/pull", pullHandler)
 	http.HandleFunc("/query", queryHandler)
@@ -58,21 +59,6 @@ func main() {
 	log.Printf("Listening on port %s", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal(err)
-	}
-}
-
-func mainPageHandler(w http.ResponseWriter, r *http.Request) {
-	topics, err := listTopics()
-	if err != nil {
-		log.Fatalf("Could not list topics: %v", err)
-		return
-	}
-
-	page := Page{Topics: topics}
-	tmpl := template.Must(template.ParseFiles("static/templates/main.html"))
-
-	if err := tmpl.Execute(w, page); err != nil {
-		log.Fatalf("Could not execute template: %v", err)
 	}
 }
 
@@ -101,32 +87,6 @@ func listSubHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResponse, _ := json.Marshal(subItems)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResponse)
-}
-
-func listTopics() ([]*pubsub.Topic, error) {
-	// projectID := "my-project-id"
-	ctx := context.Background()
-	client, err := pubsub.NewClient(ctx, projectID)
-	if err != nil {
-		return nil, fmt.Errorf("pubsub.NewClient: %v", err)
-	}
-	defer client.Close()
-
-	var topics []*pubsub.Topic
-
-	it := client.Topics(ctx)
-	for {
-		topic, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			return nil, fmt.Errorf("next: %v", err)
-		}
-		topics = append(topics, topic)
-	}
-
-	return topics, nil
 }
 
 func listSubscriptions(topicID string) ([]*pubsub.Subscription, error) {
