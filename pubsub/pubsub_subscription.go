@@ -62,3 +62,18 @@ func GetSub(config PubsubConfig, subID string) (*pubsub.Client, *pubsub.Subscrip
 
 	return client, client.Subscription(subID), nil
 }
+
+func DeleteSub(config PubsubConfig, subID string) error {
+	client, sub, err := GetSub(config, subID)
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+
+	ctx := context.Background()
+	if err := sub.Delete(ctx); err != nil {
+		return err
+	}
+
+	return nil
+}
