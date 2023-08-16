@@ -2,6 +2,7 @@ package pubsub
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -94,7 +95,9 @@ func UpdateSubPolicy(config PubsubConfig, subID string, retryPolicy *pubsub.Retr
 	if err != nil {
 		return fmt.Errorf("update: %v", err)
 	}
-	log.Printf("Updated %v config: %v\n", subID, subConfig)
+
+	subConfigJson, _ := json.Marshal(subConfig)
+	log.Printf("Updated %v config: %v\n", subID, string(subConfigJson))
 
 	return nil
 }

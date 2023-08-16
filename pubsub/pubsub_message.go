@@ -88,14 +88,21 @@ func Pull(config PubsubConfig, subID string, timeout int, limit int, isAck bool)
 
 			atomic.AddInt32(&messageCount.Inserted, 1)
 		} else {
+			err := messageModel.UpdateDeliveryAttempt(dbConfig, subID, msg)
+			if err != nil {
+				panic(err.Error())
+			}
+
 			log.Printf("Duplicate message: %q\n", string(msg.ID))
 			atomic.AddInt32(&messageCount.Duplicate, 1)
 		}
 
 		if isAck {
 			msg.Ack()
+			log.Printf("Ack message: %q\n", string(msg.ID))
 		} else {
 			msg.Nack()
+			log.Printf("Nack message: %q\n", string(msg.ID))
 		}
 
 		if limit != 0 && messageCount.Inserted == int32(limit) {

@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"encoding/json"
+	"log"
 
 	"github.com/mahyar-m/pubsub-admin/db"
 
@@ -84,7 +85,7 @@ func (messageModel *MessageModel) Insert(config db.MysqlConfig, subID string, ms
 
 	messageData := &proto.MessageData{}
 	if err := gProto.Unmarshal(msg.Data, messageData); err != nil {
-		return err
+		log.Printf("Unable to Unmarshal message data: %v, error: %v", msg.Data, err)
 	}
 
 	messageDataJson, _ := json.Marshal(messageData)
@@ -93,6 +94,35 @@ func (messageModel *MessageModel) Insert(config db.MysqlConfig, subID string, ms
 	}
 
 	_, err = stmtIns.Exec(msg.ID, subID, msg.Data, messageDataJson, attributes, msg.PublishTime, msg.DeliveryAttempt, msg.OrderingKey)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (messageModel *MessageModel) UpdateDeliveryAttempt(config db.MysqlConfig, subID string, msg *pubsub.Message) error {
+	db, err := sql.Open("mysql", config.GetConnString())
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	err = db.Ping()
+	if err != nil {
+		return err
+	}
+
+	stmtIns, err := db.Prepare(
+		`UPDATE message SET 
+			delivery_attempt = ?
+		WHERE message_id = ? AND subscription = ?`)
+	if err != nil {
+		return err
+	}
+	defer stmtIns.Close()
+
+	_, err = stmtIns.Exec(msg.DeliveryAttempt, msg.ID, subID)
 	if err != nil {
 		return err
 	}
