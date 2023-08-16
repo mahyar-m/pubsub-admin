@@ -3,6 +3,7 @@ package pubsub
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"cloud.google.com/go/pubsub"
 	"google.golang.org/api/iterator"
@@ -30,4 +31,24 @@ func ListSubscriptions(config PubsubConfig, topicID string) ([]*pubsub.Subscript
 		subs = append(subs, sub)
 	}
 	return subs, nil
+}
+
+func CreateSub(config PubsubConfig, subID string, topicID string) error {
+	ctx := context.Background()
+	client, err := pubsub.NewClient(ctx, config.GetProjectId())
+	if err != nil {
+		return fmt.Errorf("pubsub.NewClient: %v", err)
+	}
+	defer client.Close()
+
+	topic := client.Topic(topicID)
+
+	sub, err := client.CreateSubscription(ctx, subID, pubsub.SubscriptionConfig{
+		Topic: topic,
+	})
+	if err != nil {
+		return fmt.Errorf("CreateSubscription: %v", err)
+	}
+	fmt.Fprintf(os.Stdout, "Created subscription: %v\n", sub)
+	return nil
 }

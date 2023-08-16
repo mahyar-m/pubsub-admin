@@ -3,6 +3,7 @@ package pubsub
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"cloud.google.com/go/pubsub"
 	"google.golang.org/api/iterator"
@@ -31,4 +32,20 @@ func ListTopics(config PubsubConfig) ([]*pubsub.Topic, error) {
 	}
 
 	return topics, nil
+}
+
+func CreateTopic(config PubsubConfig, topicID string) error {
+	ctx := context.Background()
+	client, err := pubsub.NewClient(ctx, config.GetProjectId())
+	if err != nil {
+		return fmt.Errorf("pubsub.NewClient: %v", err)
+	}
+	defer client.Close()
+
+	t, err := client.CreateTopic(ctx, topicID)
+	if err != nil {
+		return fmt.Errorf("CreateTopic: %v", err)
+	}
+	fmt.Fprintf(os.Stdout, "Topic created: %v\n", t)
+	return nil
 }

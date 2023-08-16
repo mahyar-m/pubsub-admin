@@ -21,36 +21,8 @@ func main() {
 	os.Setenv("PUBSUB_EMULATOR_HOST", "localhost:8085")
 	port := "8080"
 
-	err := createTopic("test-topic")
-	if err != nil {
-		fmt.Println("Error:", err)
-	}
-
-	ctx := context.Background()
-	client, err := pubsub.NewClient(ctx, projectID)
-	if err != nil {
-		fmt.Println("Error:", err)
-	}
-	topic := client.Topic("test-topic")
-	err = createSub("test-sub", topic)
-	if err != nil {
-		fmt.Println("Error:", err)
-	}
-	err = createSub("test-sub1", topic)
-	if err != nil {
-		fmt.Println("Error:", err)
-	}
-
-	err = publish("test-topic", "test message")
-	if err != nil {
-		fmt.Println("Publish Error:", err)
-	}
-	err = createTopic("test-topic-1")
-	if err != nil {
-		fmt.Println("Error:", err)
-	}
-
 	http.HandleFunc("/", (&handlers.SpaHandler{}).Handle)
+	http.HandleFunc("/init", (&handlers.InitHandler{}).Handle)
 	http.HandleFunc("/sub", (&handlers.SubscriptionHandler{}).Handle)
 	http.HandleFunc("/pull", pullHandler)
 	http.HandleFunc("/query", (&handlers.QueryHandler{}).Handle)
@@ -59,66 +31,6 @@ func main() {
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal(err)
 	}
-}
-
-func createTopic(topicID string) error {
-	ctx := context.Background()
-	client, err := pubsub.NewClient(ctx, projectID)
-	if err != nil {
-		return fmt.Errorf("pubsub.NewClient: %v", err)
-	}
-	defer client.Close()
-
-	t, err := client.CreateTopic(ctx, topicID)
-	if err != nil {
-		return fmt.Errorf("CreateTopic: %v", err)
-	}
-	fmt.Fprintf(os.Stdout, "Topic created: %v\n", t)
-	return nil
-}
-
-func createSub(subID string, topic *pubsub.Topic) error {
-	ctx := context.Background()
-	client, err := pubsub.NewClient(ctx, projectID)
-	if err != nil {
-		return fmt.Errorf("pubsub.NewClient: %v", err)
-	}
-	defer client.Close()
-
-	sub, err := client.CreateSubscription(ctx, subID, pubsub.SubscriptionConfig{
-		Topic: topic,
-	})
-	if err != nil {
-		return fmt.Errorf("CreateSubscription: %v", err)
-	}
-	fmt.Fprintf(os.Stdout, "Created subscription: %v\n", sub)
-	return nil
-}
-
-func publish(topicID, msg string) error {
-	// projectID := "my-project-id"
-	// topicID := "my-topic"
-	// msg := "Hello World"
-	ctx := context.Background()
-	client, err := pubsub.NewClient(ctx, projectID)
-	if err != nil {
-		return fmt.Errorf("pubsub: NewClient: %v", err)
-	}
-	defer client.Close()
-
-	t := client.Topic(topicID)
-	result := t.Publish(ctx, &pubsub.Message{
-		Data: []byte(msg),
-	})
-	// Block until the result is returned and a server-generated
-	// ID is returned for the published message.
-	id, err := result.Get(ctx)
-	if err != nil {
-		return fmt.Errorf("pubsub: result.Get: %v", err)
-	}
-	log.Printf("Published a message; msg ID: %v\n", id)
-
-	return nil
 }
 
 func pullMsgs(subID string) (int, error) {
