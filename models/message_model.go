@@ -8,7 +8,6 @@ import (
 
 	"cloud.google.com/go/pubsub"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/google/uuid"
 	"github.com/mahyar-m/pubsub-admin/proto"
 	gProto "google.golang.org/protobuf/proto"
 )
@@ -17,7 +16,6 @@ type MessageModel struct {
 }
 
 type MessageRow struct {
-	Uuid            sql.NullString
 	MessageId       sql.NullString
 	Subscription    sql.NullString
 	Data            sql.NullString
@@ -50,7 +48,7 @@ func (messageModel *MessageModel) Select(config db.MysqlConfig, selectQuery stri
 
 	for rows.Next() {
 		var message MessageRow
-		if err := rows.Scan(&message.Uuid, &message.MessageId, &message.Subscription, &message.Data, &message.DecodedData, &message.Attribute, &message.PublishTime, &message.DeliveryAttempt, &message.OrderingKey); err != nil {
+		if err := rows.Scan(&message.MessageId, &message.Subscription, &message.Data, &message.DecodedData, &message.Attribute, &message.PublishTime, &message.DeliveryAttempt, &message.OrderingKey); err != nil {
 			return nil, err
 		}
 		messageRows = append(messageRows, message)
@@ -71,7 +69,9 @@ func (messageModel *MessageModel) Insert(config db.MysqlConfig, subID string, ms
 		return err
 	}
 
-	stmtIns, err := db.Prepare("INSERT INTO message (uuid, message_id, subscription, data, decoded_data, attribute, publish_time, delivery_attempt, ordering_key) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)")
+	stmtIns, err := db.Prepare(
+		`INSERT INTO message (message_id, subscription, data, decoded_data, attribute, publish_time, delivery_attempt, ordering_key)
+		 VALUES(?, ?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
 		return err
 	}
@@ -92,7 +92,7 @@ func (messageModel *MessageModel) Insert(config db.MysqlConfig, subID string, ms
 		return err
 	}
 
-	_, err = stmtIns.Exec(uuid.New().String(), msg.ID, subID, msg.Data, messageDataJson, attributes, msg.PublishTime, msg.DeliveryAttempt, msg.OrderingKey)
+	_, err = stmtIns.Exec(msg.ID, subID, msg.Data, messageDataJson, attributes, msg.PublishTime, msg.DeliveryAttempt, msg.OrderingKey)
 	if err != nil {
 		return err
 	}
@@ -112,7 +112,7 @@ func (messageModel *MessageModel) IsDuplicate(config db.MysqlConfig, subID strin
 		return false, err
 	}
 
-	row := db.QueryRow("SELECT count(uuid) FROM message WHERE message_id = ? AND subscription = ?", msg.ID, subID)
+	row := db.QueryRow("SELECT count(message_id) FROM message WHERE message_id = ? AND subscription = ?", msg.ID, subID)
 
 	var count int
 	if err := row.Scan(&count); err != nil {

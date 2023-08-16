@@ -1,5 +1,4 @@
 CREATE TABLE `message` (
-  `uuid` varchar(255) NOT NULL,
   `message_id` varchar(255) NOT NULL,
   `subscription` varchar(255) NOT NULL,
   `data` text,
@@ -10,4 +9,4 @@ CREATE TABLE `message` (
   `ordering_key` text
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-ALTER TABLE `message` ADD PRIMARY KEY (`uuid`);
+ALTER TABLE `message` ADD PRIMARY KEY (`message_id`,`subscription`);
