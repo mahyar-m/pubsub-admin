@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 
-	"example/pubsub_manager/db"
+	"github.com/mahyar-m/pubsub-admin/db"
 
 	"cloud.google.com/go/pubsub"
 	_ "github.com/go-sql-driver/mysql"

@@ -2,10 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
-	pubsubHelper "example/pubsub_manager/pubsub"
 	"fmt"
 	"net/http"
 	"time"
+
+	pubsubHelper "github.com/mahyar-m/pubsub-admin/pubsub"
 
 	"cloud.google.com/go/pubsub"
 )

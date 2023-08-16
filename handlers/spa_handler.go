@@ -1,10 +1,11 @@
 package handlers
 
 import (
-	pubsubHelper "example/pubsub_manager/pubsub"
 	"html/template"
 	"log"
 	"net/http"
+
+	pubsubHelper "github.com/mahyar-m/pubsub-admin/pubsub"
 
 	"cloud.google.com/go/pubsub"
 )

@@ -8,8 +8,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"example/pubsub_manager/db"
-	"example/pubsub_manager/models"
+	"github.com/mahyar-m/pubsub-admin/db"
+	"github.com/mahyar-m/pubsub-admin/models"
 
 	"cloud.google.com/go/pubsub"
 )

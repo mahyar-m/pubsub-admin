@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"os"
 
-	"example/pubsub_manager/handlers"
-	"example/pubsub_manager/router"
+	"github.com/mahyar-m/pubsub-admin/handlers"
+	"github.com/mahyar-m/pubsub-admin/router"
 
 	_ "github.com/go-sql-driver/mysql"
 )

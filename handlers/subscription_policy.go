@@ -2,12 +2,13 @@ package handlers
 
 import (
 	"encoding/json"
-	pubsubHelper "example/pubsub_manager/pubsub"
-	"example/pubsub_manager/router"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
+
+	pubsubHelper "github.com/mahyar-m/pubsub-admin/pubsub"
+	"github.com/mahyar-m/pubsub-admin/router"
 
 	"cloud.google.com/go/pubsub"
 )

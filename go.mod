@@ -1,4 +1,4 @@
-module example/pubsub_manager
+module github.com/mahyar-m/pubsub-admin
 
 go 1.20
 

@@ -2,9 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
-	pubsubHelper "example/pubsub_manager/pubsub"
 	"log"
 	"net/http"
+
+	pubsubHelper "github.com/mahyar-m/pubsub-admin/pubsub"
 )
 
 type SubItem struct {

@@ -2,10 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
-	"example/pubsub_manager/db"
-	"example/pubsub_manager/models"
 	"log"
 	"net/http"
+
+	"github.com/mahyar-m/pubsub-admin/db"
+	"github.com/mahyar-m/pubsub-admin/models"
 )
 
 type QueryHandler struct {
