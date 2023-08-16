@@ -20,13 +20,31 @@
     <div class="container">
         <div class="row">
             <div class="col s12">
-                <p>PubSub Manager</p>
+                <H3>PubSub Admin!</H3>
             </div>
         </div>
         <div class="divider"></div>
         <div class="row">
-            <div class="input-field col s12 center-align">
+            <div class="col s3 input-field">
+                Init:
+            </div>
+            <div class="input-field col s1 center-align">
                 <button id="init-button" type="button" class="btn waves-effect waves-light">Init</button>
+            </div>
+            <div class="input-field col s1 center-align">
+                <div class="preloader-wrapper small" id="init-preloader">
+                    <div class="spinner-layer spinner-green-only">
+                        <div class="circle-clipper left">
+                            <div class="circle"></div>
+                        </div>
+                        <div class="gap-patch">
+                            <div class="circle"></div>
+                        </div>
+                        <div class="circle-clipper right">
+                            <div class="circle"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="divider"></div>
@@ -84,9 +102,27 @@
             </div>
     </div>
     <div class="row">
-        <div class="input-field col s12 center-align">
+        <div class="col s6 input-field">
+            &nbsp;
+        </div>
+        <div class="input-field col s1 center-align">
             <button type="submit" class="btn waves-effect waves-light">Pull</button>
         </div>
+        <div class="input-field col s1 center-align">
+            <div class="preloader-wrapper small" id="pull-preloader">
+                <div class="spinner-layer spinner-green-only">
+                    <div class="circle-clipper left">
+                        <div class="circle"></div>
+                    </div>
+                    <div class="gap-patch">
+                        <div class="circle"></div>
+                    </div>
+                    <div class="circle-clipper right">
+                        <div class="circle"></div>
+                    </div>
+                </div>
+            </div>
+        </div>        
     </div>
     </form>
     <div class="divider"></div>
@@ -101,9 +137,27 @@
         </div>
     </div>
     <div class="row">
-        <div class="input-field col s12 center-align">
+        <div class="col s6 input-field">
+            &nbsp;
+        </div>
+        <div class="input-field col s1 center-align">
             <button id="query-button" type="button" class="btn waves-effect waves-light">Query</button>
         </div>
+        <div class="input-field col s1 center-align">
+            <div class="preloader-wrapper small" id="query-preloader">
+                <div class="spinner-layer spinner-green-only">
+                    <div class="circle-clipper left">
+                        <div class="circle"></div>
+                    </div>
+                    <div class="gap-patch">
+                        <div class="circle"></div>
+                    </div>
+                    <div class="circle-clipper right">
+                        <div class="circle"></div>
+                    </div>
+                </div>
+            </div>
+        </div>  
     </div>
     <div class="row">
         <div class="col s10 offset-s1">
@@ -179,6 +233,7 @@
             })
 
             $("#pull_form").submit(function (e) {
+                $("#pull-preloader").addClass("active")
                 e.preventDefault();
                 curr_sub = $('select#current-sub').val()
 
@@ -188,7 +243,7 @@
                     data: {
                         sub_id: curr_sub,
                         timeout: $('#timeout').val(),
-                        limit:  $('#limit').val(),
+                        limit: $('#limit').val(),
                     },
                     success: function (data) {
                         console.log(data)
@@ -197,11 +252,16 @@
                     error: function (data) {
                         console.log(data)
                         console.log('pull broken');
+                    },
+                    complete: function () {
+                        $("#pull-preloader").removeClass("active")
                     }
                 });
             });
 
             $('#query-button').on('click', function () {
+                $("#query-preloader").addClass("active")
+
                 curr_sub = $('select#current-sub').val()
                 query = $('#query').val()
 
@@ -234,11 +294,15 @@
                     error: function (data) {
                         console.log(data)
                         console.log('query broken');
+                    },
+                    complete: function () {
+                        $("#query-preloader").removeClass("active")
                     }
                 });
             })
 
             $('#init-button').on('click', function () {
+                $("#init-preloader").addClass("active")
                 $.ajax({
                     type: 'GET',
                     url: "init",
@@ -250,6 +314,9 @@
                     error: function (data) {
                         console.log(data)
                         console.log('init broken');
+                    },
+                    complete: function () {
+                        $("#init-preloader").removeClass("active")
                     }
                 });
             })
