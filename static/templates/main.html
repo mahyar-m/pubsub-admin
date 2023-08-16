@@ -26,7 +26,7 @@
         <div class="divider"></div>
         <div class="row">
             <div class="col s3 input-field">
-                Init:
+                <h5>Init:</h5>
             </div>
             <div class="input-field col s1 center-align">
                 <button id="init-button" type="button" class="btn waves-effect waves-light">Init</button>
@@ -52,8 +52,43 @@
         </div>
         <div class="divider"></div>
         <div class="row">
+            <div class="col s5 input-field">
+                <h5>Topic/Sub Selection:</h5>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col s6 input-field">
+                Topic:
+            </div>
+            <div class="col s6 input-field">
+                <select name="topic" id="topic">
+                    <option value="" disabled selected>Choose a topic</option>
+                    {{ range $_, $topic := .Topics }}
+                    <option value="{{ $topic.ID }}">{{ $topic.ID }}</option>
+                    {{ end }}
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col s6 input-field">
+                Sub:
+            </div>
             <div class="col s3 input-field">
-                Sub Policy:
+                <label>
+                    <input type="checkbox" id="current-sub-chk-box" />
+                    <span>Current Sub</span>
+                </label>
+            </div>
+            <div class="col s3 input-field" id="current-sub-wrapper">
+                <select name="current-sub" id="current-sub">
+                    <option value="" disabled selected>Choose a sub</option>
+                </select>
+            </div>
+        </div>
+        <div class="divider"></div>
+        <div class="row">
+            <div class="col s5 input-field">
+                <h5>Subscription Policy:</h5>
             </div>
         </div>
         <div class="row">
@@ -111,105 +146,84 @@
             </div>
         </div>
         <div class="divider"></div>
-        <form method="post" action="#" class="col s12" id="pull_form">
-            <div class="row">
-                <div class="col s6 input-field">
-                    Topic:
-                </div>
-                <div class="col s6 input-field">
-                    <select name="topic" id="topic">
-                        <option value="" disabled selected>Choose a topic</option>
-                        {{ range $_, $topic := .Topics }}
-                        <option value="{{ $topic.ID }}">{{ $topic.ID }}</option>
-                        {{ end }}
-                    </select>
-                </div>
+        <div class="row">
+            <div class="col s5 input-field">
+                <h5>Pull:</h5>
             </div>
-            <div class="row">
-                <div class="col s6 input-field">
-                    Sub:
-                </div>
-                <div class="col s3 input-field">
-                    <label>
-                        <input type="checkbox" id="current-sub-chk-box" />
-                        <span>Current Sub</span>
-                    </label>
-                </div>
-                <div class="col s3 input-field" id="current-sub-wrapper">
-                    <select name="current-sub" id="current-sub">
-                        <option value="" disabled selected>Choose a sub</option>
-                    </select>
-                </div>
+        </div>
+        <div class="row">
+            <div class="col s6 input-field">
+                Messasges Limit on Pull:
             </div>
-            <div class="row">
-                <div class="col s6 input-field">
-                    Messasges Limit on Pull:
-                </div>
-                <div class="col s3 input-field">
-                    <input id="limit" type="text" value="0">
-                    <span class="helper-text">Unlimited=0</span>
-                </div>
-                <div class="col s3 input-field">
-                </div>
+            <div class="col s3 input-field">
+                <input id="limit" type="text" value="0">
+                <span class="helper-text">Unlimited=0</span>
             </div>
-            <div class="row">
-                <div class="col s6 input-field">
-                    Timeout for Pull:
-                </div>
-                <div class="col s3 input-field">
-                    <input id="timeout" type="text" value="5">
-                    <span class="helper-text">Seconds, Unlimited Timeout=0</span>
-                </div>
-                <div class="col s3 input-field">
-                </div>
+            <div class="col s3 input-field">
             </div>
-            <div class="row">
-                <div class="col s6 input-field">
-                    Ack pulled messages:
-                </div>
-                <div class="col s3 input-field">
-                    <label>
-                        <input type="checkbox" id="ack-chk-box" checked />
-                        <span>Yes</span>
-                    </label>
-                </div>
-                <div class="col s3 input-field">
-                </div>
+        </div>
+        <div class="row">
+            <div class="col s6 input-field">
+                Timeout for Pull:
             </div>
-            <div class="row">
-                <div class="col s6 input-field">
-                    &nbsp;
-                </div>
-                <div class="input-field col s1 center-align">
-                    <button type="button" class="btn waves-effect waves-light" id="pull-button">Pull</button>
-                </div>
-                <div class="input-field col s1 center-align">
-                    <div class="preloader-wrapper small" id="pull-preloader">
-                        <div class="spinner-layer spinner-green-only">
-                            <div class="circle-clipper left">
-                                <div class="circle"></div>
-                            </div>
-                            <div class="gap-patch">
-                                <div class="circle"></div>
-                            </div>
-                            <div class="circle-clipper right">
-                                <div class="circle"></div>
-                            </div>
+            <div class="col s3 input-field">
+                <input id="timeout" type="text" value="5">
+                <span class="helper-text">Seconds, Unlimited Timeout=0</span>
+            </div>
+            <div class="col s3 input-field">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col s6 input-field">
+                Ack pulled messages:
+            </div>
+            <div class="col s3 input-field">
+                <label>
+                    <input type="checkbox" id="ack-chk-box" checked />
+                    <span>Yes</span>
+                </label>
+            </div>
+            <div class="col s3 input-field">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col s6 input-field">
+                &nbsp;
+            </div>
+            <div class="input-field col s1 center-align">
+                <button type="button" class="btn waves-effect waves-light" id="pull-button">Pull</button>
+            </div>
+            <div class="input-field col s1 center-align">
+                <div class="preloader-wrapper small" id="pull-preloader">
+                    <div class="spinner-layer spinner-green-only">
+                        <div class="circle-clipper left">
+                            <div class="circle"></div>
+                        </div>
+                        <div class="gap-patch">
+                            <div class="circle"></div>
+                        </div>
+                        <div class="circle-clipper right">
+                            <div class="circle"></div>
                         </div>
                     </div>
                 </div>
-                <div class="input-field col s3 center-align">
-                    Results: <span id="pull-result-count"></span>
-                </div>
             </div>
-        </form>
+            <div class="input-field col s3 center-align">
+                Results: <span id="pull-result-count"></span>
+            </div>
+        </div>
         <div class="divider"></div>
         <div class="row">
-            <div class="col s6 input-field">
-                Query:
+            <div class="col s5 input-field">
+                <h5>Query:</h5>
             </div>
-            <div class="col s6 input-field">
-                SELECT * FROM `message` WHERE <textarea id="query" class="materialize-textarea" cols="50">1=1</textarea>
+        </div>
+        <div class="row">
+            <div class="col s2 input-field">
+                &nbsp;
+            </div>
+            <div class="col s8 input-field">
+                SELECT * FROM `message` WHERE <textarea id="query" class="materialize-textarea">1=1</textarea>
             </div>
         </div>
         <div class="row">
@@ -239,7 +253,7 @@
             </div>
         </div>
         <div class="row">
-            <div class="col s10 offset-s1">
+            <div class="col s12">
                 <table class="striped" id="data-table">
                     <thead>
                         <tr>
