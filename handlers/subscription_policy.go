@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	pubsubHelper "example/pubsub_manager/pubsub"
+	"example/pubsub_manager/router"
 	"log"
 	"net/http"
 	"strconv"
@@ -12,8 +13,8 @@ import (
 )
 
 type retryPolicyResponse struct {
-	MinimumBackoff int
-	MaximumBackoff int
+	MinimumBackoff int64
+	MaximumBackoff int64
 }
 
 type SubscriptionPolicyHandler struct {
@@ -56,9 +57,8 @@ func (sph *SubscriptionPolicyHandler) postHandle(w http.ResponseWriter, r *http.
 
 func (sph *SubscriptionPolicyHandler) getHandle(w http.ResponseWriter, r *http.Request) {
 	pubsubConfig := pubsubHelper.PubsubConfig{}
-	// TODO: conver any to stirng!
-	// subId := r.Context().Value("sub_id")
-	subId := "test-sub-with-retry"
+	params := router.RequestParams(r)
+	subId := params["sub_id"]
 
 	retryPolicy, err := pubsubHelper.GetSubPolicy(pubsubConfig, subId)
 	if err != nil {
@@ -71,11 +71,8 @@ func (sph *SubscriptionPolicyHandler) getHandle(w http.ResponseWriter, r *http.R
 	}
 
 	retryPolicyResponse := retryPolicyResponse{
-		// TODO: figure out how to convert to int
-		// max: (retryPolicy.MaximumBackoff / time.Second),
-		// min: retryPolicy.MinimumBackoff / time.Second,
-		MinimumBackoff: 5,
-		MaximumBackoff: 60,
+		MinimumBackoff: int64(retryPolicy.MinimumBackoff.(time.Duration) / time.Second),
+		MaximumBackoff: int64(retryPolicy.MaximumBackoff.(time.Duration) / time.Second),
 	}
 
 	jsonResponse, _ := json.Marshal(retryPolicyResponse)

@@ -73,3 +73,12 @@ func (rtr *Route) Match(r *http.Request) (bool, map[string]string) {
 
 	return true, params
 }
+
+// Returns the current request params, if any.
+func RequestParams(r *http.Request) map[string]string {
+	if value := r.Context().Value(varsKey); value != nil {
+		return value.(map[string]string)
+	}
+
+	return nil
+}
