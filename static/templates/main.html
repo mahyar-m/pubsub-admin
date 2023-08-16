@@ -46,6 +46,9 @@
                     </div>
                 </div>
             </div>
+            <div class="input-field col s3 center-align">
+                Results: <span id="init-result-count"></span>
+            </div>
         </div>
         <div class="divider"></div>
         <form method="post" action="#" class="col s12" id="pull_form">
@@ -54,7 +57,7 @@
                     Topic:
                 </div>
                 <div class="col s6 input-field">
-                    <select name="topic" id="topic" required="required">
+                    <select name="topic" id="topic">
                         <option value="" disabled selected>Choose a topic</option>
                         {{ range $_, $topic := .Topics }}
                         <option value="{{ $topic.ID }}">{{ $topic.ID }}</option>
@@ -73,7 +76,7 @@
                     </label>
                 </div>
                 <div class="col s3 input-field" id="current-sub-wrapper">
-                    <select name="current-sub" id="current-sub" required="required">
+                    <select name="current-sub" id="current-sub">
                         <option value="" disabled selected>Choose a sub</option>
                     </select>
                 </div>
@@ -123,7 +126,7 @@
                 </div>
             </div>
         </div>
-        <div class="input-field col s2 center-align">
+        <div class="input-field col s3 center-align">
             Results: <span id="pull-result-count"></span>
         </div>
     </div>
@@ -159,7 +162,7 @@
                 </div>
             </div>
         </div>
-        <div class="input-field col s2 center-align">
+        <div class="input-field col s3 center-align">
             Results: <span id="query-result-count"></span>
         </div>
     </div>
@@ -237,10 +240,15 @@
             })
 
             $("#pull_form").submit(function (e) {
-                $("#pull-preloader").addClass("active")
                 e.preventDefault();
-                curr_sub = $('select#current-sub').val()
+                curr_sub = $('#current-sub').val()
+                if (!curr_sub) {
+                    $('#pull-result-count').html("<span style=\"color:red\">Sub is required!</span>");
+                    return
+                }
 
+                $('#pull-result-count').html("<span style=\"color:blue\">Pulling</span>");
+                $("#pull-preloader").addClass("active")
                 $.ajax({
                     type: 'POST',
                     url: "pull",
@@ -252,12 +260,12 @@
                     success: function (data) {
                         console.log(data)
                         console.log('pull success');
-                        $('#pull-result-count').text(data);
+                        $('#pull-result-count').html(`<span style="color:green">Pulled ${data} messages.</span>`);
                     },
                     error: function (data) {
                         console.log(data)
                         console.log('pull broken');
-                        $('#pull-result-count').text("failed");
+                        $('#pull-result-count').text("<span style=\"color:red\">Failed!</span>");
                     },
                     complete: function () {
                         $("#pull-preloader").removeClass("active")
@@ -266,16 +274,18 @@
             });
 
             $('#query-button').on('click', function () {
-                $("#query-preloader").addClass("active")
-
-                curr_sub = $('select#current-sub').val()
                 query = $('#query').val()
+                if (!query) {
+                    $('#query-result-count').html("<span style=\"color:red\">Query is required!</span>");
+                    return
+                }
 
+                $('#query-result-count').html("<span style=\"color:blue\">Quering</span>");
+                $("#query-preloader").addClass("active")
                 $.ajax({
                     type: 'GET',
                     url: "query",
                     data: {
-                        sub_id: curr_sub,
                         query: query
                     },
                     success: function (data) {
@@ -284,7 +294,7 @@
                         table = $('#data-table')
                         $('#data-table tbody').empty();
                         if (!data) {
-                            $('#query-result-count').text("0");
+                            $('#query-result-count').html("<span style=\"color:green\">No row!</span>");
                             return
                         }
                         Object.entries(data).forEach((entry) => {
@@ -301,12 +311,12 @@
                                 </tr>`
                             );
                         });
-                        $('#query-result-count').text(Object.keys(data).length);
+                        $('#query-result-count').html(`<span style="color:green">${Object.keys(data).length} rows</span>`);
                     },
                     error: function (data) {
                         console.log(data)
                         console.log('query broken');
-                        $('#query-result-count').text("failed");
+                        $('#query-result-count').html("<span style=\"color:red\">Query failed!</span>");
                     },
                     complete: function () {
                         $("#query-preloader").removeClass("active")
@@ -315,6 +325,7 @@
             })
 
             $('#init-button').on('click', function () {
+                $('#init-result-count').html("<span style=\"color:blue\">Initializing</span>");
                 $("#init-preloader").addClass("active")
                 $.ajax({
                     type: 'GET',
@@ -322,11 +333,11 @@
                     data: {},
                     success: function (data) {
                         console.log(data)
-                        console.log('init success');
+                        $('#init-result-count').html("<span style=\"color:green\">Init was succesfull!</span>");
                     },
                     error: function (data) {
                         console.log(data)
-                        console.log('init broken');
+                        $('#init-result-count').html("<span style=\"color:red\">Init failed!</span>");
                     },
                     complete: function () {
                         $("#init-preloader").removeClass("active")
