@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -11,6 +12,10 @@ import (
 	"example/pubsub_manager/models"
 
 	"cloud.google.com/go/pubsub"
+)
+
+var (
+	mutex sync.Mutex
 )
 
 func Publish(config PubsubConfig, topicID, msg string) error {
@@ -35,20 +40,24 @@ func Publish(config PubsubConfig, topicID, msg string) error {
 	return nil
 }
 
-func Pull(config PubsubConfig, subID string) (int, error) {
-	ctx := context.Background()
-	client, err := pubsub.NewClient(ctx, config.GetProjectId())
+func Pull(config PubsubConfig, subID string, timeout int, limit int) (int, error) {
+	client, sub, err := GetSub(config, subID)
 	if err != nil {
-		return 0, fmt.Errorf("pubsub.NewClient: %v", err)
+		return 0, err
 	}
 	defer client.Close()
 
-	sub := client.Subscription(subID)
+	if limit != 0 {
+		sub.ReceiveSettings.Synchronous = true
+		sub.ReceiveSettings.MaxOutstandingMessages = limit
+	}
 
-	// Receive messages for 5 seconds, which simplifies testing.
-	// Comment this out in production, since `Receive` should
-	// be used as a long running operation.
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	var cancel context.CancelFunc
+	ctx, cancel := context.WithCancel(context.Background())
+
+	if timeout != 0 {
+		ctx, cancel = context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
+	}
 	defer cancel()
 
 	dbConfig := db.MysqlConfig{}
@@ -56,6 +65,7 @@ func Pull(config PubsubConfig, subID string) (int, error) {
 
 	var received int32
 	err = sub.Receive(ctx, func(_ context.Context, msg *pubsub.Message) {
+		mutex.Lock()
 		log.Printf("Got message: %q\n", string(msg.Data))
 
 		err := messageModel.Insert(dbConfig, subID, msg)
@@ -65,6 +75,12 @@ func Pull(config PubsubConfig, subID string) (int, error) {
 
 		atomic.AddInt32(&received, 1)
 		msg.Ack()
+
+		if limit != 0 && received == int32(limit) {
+			cancel()
+		}
+
+		mutex.Unlock()
 	})
 	if err != nil {
 		return 0, fmt.Errorf("sub.Receive: %v", err)

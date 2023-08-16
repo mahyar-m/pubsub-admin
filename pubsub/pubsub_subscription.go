@@ -52,3 +52,13 @@ func CreateSub(config PubsubConfig, subID string, topicID string) error {
 	fmt.Fprintf(os.Stdout, "Created subscription: %v\n", sub)
 	return nil
 }
+
+func GetSub(config PubsubConfig, subID string) (*pubsub.Client, *pubsub.Subscription, error) {
+	ctx := context.Background()
+	client, err := pubsub.NewClient(ctx, config.GetProjectId())
+	if err != nil {
+		return nil, nil, fmt.Errorf("pubsub.NewClient: %v", err)
+	}
+
+	return client, client.Subscription(subID), nil
+}
