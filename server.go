@@ -54,7 +54,7 @@ func main() {
 	http.HandleFunc("/", (&handlers.SpaHandler{}).Handle)
 	http.HandleFunc("/sub", listSubHandler)
 	http.HandleFunc("/pull", pullHandler)
-	http.HandleFunc("/query", queryHandler)
+	http.HandleFunc("/query", (&handlers.QueryHandler{}).Handle)
 
 	log.Printf("Listening on port %s", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
@@ -243,58 +243,6 @@ func pullHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonResponse)
 }
 
-func queryHandler(w http.ResponseWriter, r *http.Request) {
-	query := r.FormValue("query")
-
-	db, err := sql.Open("mysql", "root:root@tcp(localhost)/golang-docker?parseTime=true")
-	if err != nil {
-		panic(err.Error()) // Just for example purpose. You should use proper error handling instead of panic
-	}
-	defer db.Close()
-
-	err = db.Ping()
-	if err != nil {
-		panic(err.Error()) // proper error handling instead of panic in your app
-	}
-
-	// Prepare statement for inserting data
-	rows, err := db.Query(query)
-	if err != nil {
-		panic(err.Error()) // proper error handling instead of panic in your app
-	}
-	defer rows.Close() // Close the statement when we leave main() / the program terminates
-
-	var messageRows []MessageRow
-
-	// Loop through rows, using Scan to assign column data to struct fields.
-	for rows.Next() {
-		var message MessageRow
-		if err := rows.Scan(&message.Id, &message.Sub, &message.Data, &message.Attribute, &message.PublishTime, &message.DeliveryAttempt, &message.OrderingKey); err != nil {
-			panic(err.Error())
-		}
-		messageRows = append(messageRows, message)
-	}
-
-	jsonResponse, _ := json.Marshal(messageRows)
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonResponse)
-}
-
 const (
 	projectID string = "test"
 )
-
-// The Page struct holds page data for rendering
-type Page struct {
-	Topics []*pubsub.Topic
-}
-
-type MessageRow struct {
-	Id              string
-	Sub             string
-	Data            sql.NullString
-	Attribute       sql.NullString
-	PublishTime     sql.NullTime
-	DeliveryAttempt sql.NullInt32
-	OrderingKey     sql.NullString
-}
