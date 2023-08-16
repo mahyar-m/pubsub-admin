@@ -9,7 +9,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -18,24 +17,9 @@ import (
 	"google.golang.org/api/iterator"
 )
 
-var (
-	topic *pubsub.Topic
-
-	// Messages received by this instance.
-	messagesMu sync.Mutex
-	messages   []string
-
-	// token is used to verify push requests.
-	// token = mustGetenv("PUBSUB_VERIFICATION_TOKEN")
-)
-
-const maxMessages = 10
-
 func main() {
 	os.Setenv("PUBSUB_EMULATOR_HOST", "localhost:8085")
 	port := "8080"
-
-	page = Page{}
 
 	err := createTopic("test-topic")
 	if err != nil {
@@ -66,7 +50,7 @@ func main() {
 		fmt.Println("Error:", err)
 	}
 
-	http.HandleFunc("/", listHandler)
+	http.HandleFunc("/", mainPageHandler)
 	http.HandleFunc("/sub", listSubHandler)
 	http.HandleFunc("/pull", pullHandler)
 	http.HandleFunc("/query", queryHandler)
@@ -77,23 +61,18 @@ func main() {
 	}
 }
 
-func listHandler(w http.ResponseWriter, r *http.Request) {
-	messagesMu.Lock()
-	defer messagesMu.Unlock()
-
-	// strArr := []string{"Abc", "Xyz", "Mno"}
-	// messages = strArr
-
-	topics, topicErr := listTopics()
-	if topicErr != nil {
-		log.Printf("Could list topics: %v", topicErr)
+func mainPageHandler(w http.ResponseWriter, r *http.Request) {
+	topics, err := listTopics()
+	if err != nil {
+		log.Fatalf("Could not list topics: %v", err)
 		return
 	}
 
-	page.Topics = topics
+	page := Page{Topics: topics}
+	tmpl := template.Must(template.ParseFiles("static/templates/main.html"))
 
 	if err := tmpl.Execute(w, page); err != nil {
-		log.Printf("Could not execute template: %v", err)
+		log.Fatalf("Could not execute template: %v", err)
 	}
 }
 
@@ -340,11 +319,6 @@ func queryHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResponse)
 }
-
-var (
-	tmpl = template.Must(template.ParseFiles("static/templates/main.html"))
-	page Page
-)
 
 const (
 	projectID string = "test"
