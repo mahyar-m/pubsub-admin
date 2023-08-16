@@ -16,11 +16,11 @@ func main() {
 	port := "8080"
 
 	router := &router.Router{}
-	router.Route("GET", "/", (&handlers.SpaHandler{}).Handle)
-	router.Route("POST", "/init", (&handlers.InitHandler{}).Handle)
-	router.Route("GET", "/sub", (&handlers.SubscriptionHandler{}).Handle)
-	router.Route("POST", "/pull", (&handlers.PullHandler{}).Handle)
-	router.Route("GET", "/query", (&handlers.QueryHandler{}).Handle)
+	router.Route("GET", "/", (&handlers.SpaHandler{}).Handle, false)
+	router.Route("POST", "/init", (&handlers.InitHandler{}).Handle, false)
+	router.Route("GET", "/sub", (&handlers.SubscriptionHandler{}).Handle, false)
+	router.Route("POST", "/pull", (&handlers.PullHandler{}).Handle, false)
+	router.Route("GET", "/query", (&handlers.QueryHandler{}).Handle, false)
 
 	log.Printf("Listening on port %s", port)
 	if err := http.ListenAndServe(":"+port, router); err != nil {
