@@ -85,3 +85,25 @@ func (messageModel *MessageModel) Insert(config db.MysqlConfig, subID string, ms
 
 	return nil
 }
+
+func (messageModel *MessageModel) IsDuplicate(config db.MysqlConfig, subID string, msg *pubsub.Message) (bool, error) {
+	db, err := sql.Open("mysql", config.GetConnString())
+	if err != nil {
+		return false, err
+	}
+	defer db.Close()
+
+	err = db.Ping()
+	if err != nil {
+		return false, err
+	}
+
+	row := db.QueryRow("SELECT count(uuid) FROM message WHERE message_id = ? AND subscription = ?", msg.ID, subID)
+
+	var count int
+	if err := row.Scan(&count); err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
