@@ -348,7 +348,7 @@
                             console.log(data)
                             console.log('pull success');
                             $('#pull-result-count').html(
-                                `<span style="color:green">Pulled ${data} messages.</span>`
+                                `<span style="color:green">Pulled total ${data.TotalRecived} messages. Inserted: ${data.Inserted} and Duplicate: ${data.Duplicate}</span>`
                             );
                         },
                         error: function (data) {

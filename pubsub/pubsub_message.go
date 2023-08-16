@@ -14,6 +14,12 @@ import (
 	"cloud.google.com/go/pubsub"
 )
 
+type MessageCount struct {
+	TotalRecived int32
+	Inserted     int32
+	Duplicate    int32
+}
+
 var (
 	mutex sync.Mutex
 )
@@ -40,10 +46,12 @@ func Publish(config PubsubConfig, topicID, msg string) error {
 	return nil
 }
 
-func Pull(config PubsubConfig, subID string, timeout int, limit int, isAck bool) (int, error) {
+func Pull(config PubsubConfig, subID string, timeout int, limit int, isAck bool) (MessageCount, error) {
+	var messageCount MessageCount
+
 	client, sub, err := GetSub(config, subID)
 	if err != nil {
-		return 0, err
+		return messageCount, err
 	}
 	defer client.Close()
 
@@ -63,9 +71,9 @@ func Pull(config PubsubConfig, subID string, timeout int, limit int, isAck bool)
 	dbConfig := db.MysqlConfig{}
 	messageModel := models.MessageModel{}
 
-	var received int32
 	err = sub.Receive(ctx, func(_ context.Context, msg *pubsub.Message) {
 		mutex.Lock()
+		atomic.AddInt32(&messageCount.TotalRecived, 1)
 		log.Printf("Got message with ID: %q, and Data:%q \n", msg.ID, string(msg.Data))
 		isDuplicate, err := messageModel.IsDuplicate(dbConfig, subID, msg)
 		if err != nil {
@@ -78,9 +86,10 @@ func Pull(config PubsubConfig, subID string, timeout int, limit int, isAck bool)
 				panic(err.Error())
 			}
 
-			atomic.AddInt32(&received, 1)
+			atomic.AddInt32(&messageCount.Inserted, 1)
 		} else {
 			log.Printf("Duplicate message: %q\n", string(msg.ID))
+			atomic.AddInt32(&messageCount.Duplicate, 1)
 		}
 
 		if isAck {
@@ -89,16 +98,16 @@ func Pull(config PubsubConfig, subID string, timeout int, limit int, isAck bool)
 			msg.Nack()
 		}
 
-		if limit != 0 && received == int32(limit) {
+		if limit != 0 && messageCount.Inserted == int32(limit) {
 			cancel()
 		}
 
 		mutex.Unlock()
 	})
 	if err != nil {
-		return 0, fmt.Errorf("sub.Receive: %v", err)
+		return messageCount, fmt.Errorf("sub.Receive: %v", err)
 	}
-	log.Printf("Received %d messages\n", received)
+	log.Printf("Received total %d messages. Inserted: %d and Duplicated: %d\n", messageCount.TotalRecived, messageCount.Inserted, messageCount.Duplicate)
 
-	return int(received), nil
+	return messageCount, nil
 }
