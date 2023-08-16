@@ -15,7 +15,6 @@ import (
 
 	"cloud.google.com/go/pubsub"
 	_ "github.com/go-sql-driver/mysql"
-	"google.golang.org/api/iterator"
 )
 
 func main() {
@@ -52,7 +51,7 @@ func main() {
 	}
 
 	http.HandleFunc("/", (&handlers.SpaHandler{}).Handle)
-	http.HandleFunc("/sub", listSubHandler)
+	http.HandleFunc("/sub", (&handlers.SubscriptionHandler{}).Handle)
 	http.HandleFunc("/pull", pullHandler)
 	http.HandleFunc("/query", (&handlers.QueryHandler{}).Handle)
 
@@ -60,57 +59,6 @@ func main() {
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal(err)
 	}
-}
-
-type SubItem struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}
-
-type SubItems []SubItem
-
-func listSubHandler(w http.ResponseWriter, r *http.Request) {
-	subs, err := listSubscriptions(r.FormValue("topic_id"))
-	if err != nil {
-		log.Printf("Could list topics: %v", err)
-		return
-	}
-	subItems := SubItems{}
-	for _, sub := range subs {
-		log.Printf("Sub: %v", sub.String())
-		subItem := SubItem{
-			ID:   sub.ID(),
-			Name: sub.String(),
-		}
-		subItems = append(subItems, subItem)
-	}
-	jsonResponse, _ := json.Marshal(subItems)
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonResponse)
-}
-
-func listSubscriptions(topicID string) ([]*pubsub.Subscription, error) {
-	ctx := context.Background()
-	client, err := pubsub.NewClient(ctx, projectID)
-	if err != nil {
-		return nil, fmt.Errorf("pubsub.NewClient: %v", err)
-	}
-	defer client.Close()
-
-	var subs []*pubsub.Subscription
-
-	it := client.Topic(topicID).Subscriptions(ctx)
-	for {
-		sub, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			return nil, fmt.Errorf("next: %v", err)
-		}
-		subs = append(subs, sub)
-	}
-	return subs, nil
 }
 
 func createTopic(topicID string) error {

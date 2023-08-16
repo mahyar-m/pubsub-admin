@@ -8,7 +8,7 @@ import (
 	"google.golang.org/api/iterator"
 )
 
-func ListTopics(config PubsubConfig) ([]*pubsub.Topic, error) {
+func ListSubscriptions(config PubsubConfig, topicID string) ([]*pubsub.Subscription, error) {
 	ctx := context.Background()
 	client, err := pubsub.NewClient(ctx, config.GetProjectId())
 	if err != nil {
@@ -16,19 +16,18 @@ func ListTopics(config PubsubConfig) ([]*pubsub.Topic, error) {
 	}
 	defer client.Close()
 
-	var topics []*pubsub.Topic
+	var subs []*pubsub.Subscription
 
-	it := client.Topics(ctx)
+	it := client.Topic(topicID).Subscriptions(ctx)
 	for {
-		topic, err := it.Next()
+		sub, err := it.Next()
 		if err == iterator.Done {
 			break
 		}
 		if err != nil {
 			return nil, fmt.Errorf("next: %v", err)
 		}
-		topics = append(topics, topic)
+		subs = append(subs, sub)
 	}
-
-	return topics, nil
+	return subs, nil
 }
