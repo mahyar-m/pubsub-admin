@@ -44,8 +44,13 @@ func (sph *SubscriptionPolicyHandler) postHandle(w http.ResponseWriter, r *http.
 		log.Fatal(err)
 		return
 	}
-	retryPolicy := &pubsub.RetryPolicy{MinimumBackoff: time.Duration(minimumBackoff) * time.Second, MaximumBackoff: time.Duration(maximumBackoff) * time.Second}
-	err = pubsubHelper.UpdateSubPolicy(pubsubConfig, subId, retryPolicy)
+
+	var retryPolicy pubsub.RetryPolicy
+	if minimumBackoff != 0 || maximumBackoff != 0 {
+		retryPolicy = pubsub.RetryPolicy{MinimumBackoff: time.Duration(minimumBackoff) * time.Second, MaximumBackoff: time.Duration(maximumBackoff) * time.Second}
+	}
+
+	err = pubsubHelper.UpdateSubPolicy(pubsubConfig, subId, &retryPolicy)
 	if err != nil {
 		log.Printf("Could not update policy: %v", err)
 		return
