@@ -3,6 +3,7 @@ package pubsub
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 
 	"cloud.google.com/go/pubsub"
@@ -45,7 +46,7 @@ func CreateSub(config PubsubConfig, subID string, topicID string, retryPolicy *p
 
 	sub, err := client.CreateSubscription(ctx, subID, pubsub.SubscriptionConfig{
 		Topic:       topic,
-		RetryPolicy: nil,
+		RetryPolicy: retryPolicy,
 	})
 	if err != nil {
 		return fmt.Errorf("CreateSubscription: %v", err)
@@ -77,4 +78,39 @@ func DeleteSub(config PubsubConfig, subID string) error {
 	}
 
 	return nil
+}
+
+func UpdateSubPolicy(config PubsubConfig, subID string, retryPolicy *pubsub.RetryPolicy) error {
+	ctx := context.Background()
+	client, err := pubsub.NewClient(ctx, config.GetProjectId())
+	if err != nil {
+		return fmt.Errorf("pubsub.NewClient: %v", err)
+	}
+	defer client.Close()
+
+	subConfig, err := client.Subscription(subID).Update(ctx, pubsub.SubscriptionConfigToUpdate{
+		RetryPolicy: retryPolicy,
+	})
+	if err != nil {
+		return fmt.Errorf("update: %v", err)
+	}
+	log.Printf("Updated %v config: %v\n", subID, subConfig)
+
+	return nil
+}
+
+func GetSubPolicy(config PubsubConfig, subID string) (*pubsub.RetryPolicy, error) {
+	client, sub, err := GetSub(config, subID)
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	ctx := context.Background()
+	subscriptionConfig, err := sub.Config(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return subscriptionConfig.RetryPolicy, nil
 }

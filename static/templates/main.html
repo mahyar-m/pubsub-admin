@@ -51,6 +51,66 @@
             </div>
         </div>
         <div class="divider"></div>
+        <div class="row">
+            <div class="col s3 input-field">
+                Sub Policy:
+            </div>
+        </div>
+        <div class="row">
+            <div class="col s6 input-field">
+                Minimum Backoff:
+            </div>
+            <div class="col s3 input-field">
+                <input id="minimum-backoff" type="text" value="">
+                <span class="helper-text">Unlimited=0</span>
+            </div>
+            <div class="col s3 input-field">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col s6 input-field">
+                Maximum Backoff:
+            </div>
+            <div class="col s3 input-field">
+                <input id="maximum-backoff" type="text" value="">
+                <span class="helper-text">Seconds, Unlimited Timeout=0</span>
+            </div>
+            <div class="col s3 input-field">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col s3 input-field">
+                &nbsp;
+            </div>
+            <div class="input-field col s1 center-align">
+                <button id="read-sub-policy-button" type="button" class="btn waves-effect waves-light">Read</button>
+            </div>
+            <div class="input-field col s1 center-align">
+                &nbsp;
+            </div>
+            <div class="input-field col s1 center-align">
+                <button id="update-sub-policy-button" type="button" class="btn waves-effect waves-light">Update</button>
+            </div>
+            <div class="input-field col s1 center-align">
+                <div class="preloader-wrapper small" id="sub-policy-preloader">
+                    <div class="spinner-layer spinner-green-only">
+                        <div class="circle-clipper left">
+                            <div class="circle"></div>
+                        </div>
+                        <div class="gap-patch">
+                            <div class="circle"></div>
+                        </div>
+                        <div class="circle-clipper right">
+                            <div class="circle"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="input-field col s3 center-align">
+                Results: <span id="sub-policy-result-count"></span>
+            </div>
+        </div>
+        <div class="divider"></div>
         <form method="post" action="#" class="col s12" id="pull_form">
             <div class="row">
                 <div class="col s6 input-field">
@@ -368,7 +428,49 @@
                         }
                     });
                 })
+
+                $('#read-sub-policy-button').on('click', function () {
+                    curr_sub = $('#current-sub').val()
+                    if (!curr_sub) {
+                        $('#sub-policy-result-count').html(
+                            "<span style=\"color:red\">Sub is required!</span>");
+                        return
+                    }
+
+                    $('#sub-policy-result-count').html("<span style=\"color:blue\">Reading</span>");
+                    $("#sub-policy-preloader").addClass("active")
+                    $.ajax({
+                        type: 'GET',
+                        url: `/sub/${curr_sub}/sub_policy`,
+                        data: {},
+                        success: function (data) {
+                            if (!data) {
+                                $('#sub-policy-result-count').html(
+                                    "<span style=\"color:green\">No policy found</span>"
+                                );
+                                return
+                            }
+                            console.log(data)
+                            $("#minimum-backoff").val(data["MinimumBackoff"])
+                            $("#maximum-backoff").val(data["MaximumBackoff"])
+
+                            $('#sub-policy-result-count').html(
+                                "<span style=\"color:green\">Read was succesfull!</span>"
+                            );
+                        },
+                        error: function (data) {
+                            console.log(data)
+                            $('#sub-policy-result-count').html(
+                                "<span style=\"color:red\">Read failed!</span>");
+                        },
+                        complete: function () {
+                            $("#sub-policy-preloader").removeClass("active")
+                        }
+                    });
+                })
             });
+
+            // 
 
             const clearSelect = function (selectElement) {
                 selectElement.find('option').not(':first').remove();

@@ -18,6 +18,8 @@ func main() {
 	router := &router.Router{}
 	router.Route("GET", "/", (&handlers.SpaHandler{}).Handle, false)
 	router.Route("POST", "/init", (&handlers.InitHandler{}).Handle, false)
+	router.Route("GET", `/sub/(?P<sub_id>[A-Za-z0-9_-]+)/sub_policy`, (&handlers.SubscriptionPolicyHandler{}).Handle, true)
+	router.Route("POST", `/sub/(?P<sub_id>[A-Za-z0-9_-]+)/sub_policy`, (&handlers.SubscriptionPolicyHandler{}).Handle, true)
 	router.Route("GET", "/sub", (&handlers.SubscriptionHandler{}).Handle, false)
 	router.Route("POST", "/pull", (&handlers.PullHandler{}).Handle, false)
 	router.Route("GET", "/query", (&handlers.QueryHandler{}).Handle, false)
