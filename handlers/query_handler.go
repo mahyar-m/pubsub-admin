@@ -13,7 +13,7 @@ type QueryHandler struct {
 
 func (qh *QueryHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	config := db.MysqlConfig{}
-	query := r.FormValue("query")
+	query := "SELECT * FROM `message` WHERE " + r.FormValue("query")
 
 	messageRows, err := (&models.MessageModel{}).Select(config, query)
 	if err != nil {

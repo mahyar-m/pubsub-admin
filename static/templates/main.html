@@ -122,7 +122,10 @@
                     </div>
                 </div>
             </div>
-        </div>        
+        </div>
+        <div class="input-field col s2 center-align">
+            Results: <span id="pull-result-count"></span>
+        </div>
     </div>
     </form>
     <div class="divider"></div>
@@ -131,9 +134,7 @@
             Query:
         </div>
         <div class="col s6 input-field">
-            <label>
-                <textarea id="query" class="materialize-textarea" cols="50">SELECT * FROM `message`</textarea>
-            </label>
+            SELECT * FROM `message` WHERE <textarea id="query" class="materialize-textarea" cols="50">1=1</textarea>
         </div>
     </div>
     <div class="row">
@@ -157,7 +158,10 @@
                     </div>
                 </div>
             </div>
-        </div>  
+        </div>
+        <div class="input-field col s2 center-align">
+            Results: <span id="query-result-count"></span>
+        </div>
     </div>
     <div class="row">
         <div class="col s10 offset-s1">
@@ -248,10 +252,12 @@
                     success: function (data) {
                         console.log(data)
                         console.log('pull success');
+                        $('#pull-result-count').text(data);
                     },
                     error: function (data) {
                         console.log(data)
                         console.log('pull broken');
+                        $('#pull-result-count').text("failed");
                     },
                     complete: function () {
                         $("#pull-preloader").removeClass("active")
@@ -277,11 +283,16 @@
                         console.log('query success');
                         table = $('#data-table')
                         $('#data-table tbody').empty();
+                        if (!data) {
+                            $('#query-result-count').text("0");
+                            return
+                        }
                         Object.entries(data).forEach((entry) => {
                             const [key, value] = entry;
                             table.find('tbody').append(
-                                `<tr><td>${value.Id}</td>
-                                    <td>${value.Sub}</td>
+                                `<tr>
+                                    <td>${value.MessageId.Valid?value.MessageId.String:"null"}</td>
+                                    <td>${value.Subscription.Valid?value.Subscription.String:"null"}</td>
                                     <td>${value.Data.Valid?value.Data.String:"null"}</td>
                                     <td>${value.Attribute.Valid?value.Attribute.String:"null"}</td>
                                     <td>${value.PublishTime.Valid?value.PublishTime.Time:"null"}</td>
@@ -290,10 +301,12 @@
                                 </tr>`
                             );
                         });
+                        $('#query-result-count').text(Object.keys(data).length);
                     },
                     error: function (data) {
                         console.log(data)
                         console.log('query broken');
+                        $('#query-result-count').text("failed");
                     },
                     complete: function () {
                         $("#query-preloader").removeClass("active")

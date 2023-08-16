@@ -8,14 +8,16 @@ import (
 
 	"cloud.google.com/go/pubsub"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/google/uuid"
 )
 
 type MessageModel struct {
 }
 
 type MessageRow struct {
-	Id              string
-	Sub             string
+	Uuid            sql.NullString
+	MessageId       sql.NullString
+	Subscription    sql.NullString
 	Data            sql.NullString
 	Attribute       sql.NullString
 	PublishTime     sql.NullTime
@@ -45,7 +47,7 @@ func (messageModel *MessageModel) Select(config db.MysqlConfig, selectQuery stri
 
 	for rows.Next() {
 		var message MessageRow
-		if err := rows.Scan(&message.Id, &message.Sub, &message.Data, &message.Attribute, &message.PublishTime, &message.DeliveryAttempt, &message.OrderingKey); err != nil {
+		if err := rows.Scan(&message.Uuid, &message.MessageId, &message.Subscription, &message.Data, &message.Attribute, &message.PublishTime, &message.DeliveryAttempt, &message.OrderingKey); err != nil {
 			return nil, err
 		}
 		messageRows = append(messageRows, message)
@@ -66,7 +68,7 @@ func (messageModel *MessageModel) Insert(config db.MysqlConfig, subID string, ms
 		return err
 	}
 
-	stmtIns, err := db.Prepare("INSERT INTO message (id, sub, data, attribute, publish_time, delivery_attempt, ordering_key) VALUES( ?, ?, ?, ?, ?, ?, ? )") // ? = placeholder
+	stmtIns, err := db.Prepare("INSERT INTO message (uuid, message_id, subscription, data, attribute, publish_time, delivery_attempt, ordering_key) VALUES(?, ?, ?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		return err
 	}
@@ -76,7 +78,7 @@ func (messageModel *MessageModel) Insert(config db.MysqlConfig, subID string, ms
 	if msg.Attributes != nil {
 		attributes, _ = json.Marshal(msg.Attributes)
 	}
-	_, err = stmtIns.Exec(msg.ID, subID, msg.Data, attributes, msg.PublishTime, msg.DeliveryAttempt, msg.OrderingKey)
+	_, err = stmtIns.Exec(uuid.New().String(), msg.ID, subID, msg.Data, attributes, msg.PublishTime, msg.DeliveryAttempt, msg.OrderingKey)
 	if err != nil {
 		return err
 	}
