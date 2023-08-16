@@ -3,6 +3,7 @@ CREATE TABLE `message` (
   `message_id` varchar(255) NOT NULL,
   `subscription` varchar(255) NOT NULL,
   `data` text,
+  `decoded_data` text,
   `attribute` text,
   `publish_time` datetime NOT NULL,
   `delivery_attempt` int(11) DEFAULT NULL,

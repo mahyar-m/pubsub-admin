@@ -24,7 +24,7 @@ var (
 	mutex sync.Mutex
 )
 
-func Publish(config PubsubConfig, topicID, msg string) error {
+func Publish(config PubsubConfig, topicID string, msg_data []byte) error {
 	ctx := context.Background()
 	client, err := pubsub.NewClient(ctx, config.GetProjectId())
 	if err != nil {
@@ -34,7 +34,7 @@ func Publish(config PubsubConfig, topicID, msg string) error {
 
 	topic := client.Topic(topicID)
 	result := topic.Publish(ctx, &pubsub.Message{
-		Data: []byte(msg),
+		Data: msg_data,
 	})
 
 	id, err := result.Get(ctx)

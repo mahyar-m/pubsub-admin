@@ -262,6 +262,7 @@
                             <th>Id</th>
                             <th>Sub</th>
                             <th>Data</th>
+                            <th>Decoded Data</th>
                             <th>Attribute</th>
                             <th>Publish Time</th>
                             <th>Delivery Attempts</th>
@@ -398,6 +399,7 @@
                                     <td>${value.MessageId.Valid?value.MessageId.String:"null"}</td>
                                     <td>${value.Subscription.Valid?value.Subscription.String:"null"}</td>
                                     <td>${value.Data.Valid?value.Data.String:"null"}</td>
+                                    <td>${value.DecodedData.Valid?value.DecodedData.String:"null"}</td>
                                     <td>${value.Attribute.Valid?value.Attribute.String:"null"}</td>
                                     <td>${value.PublishTime.Valid?value.PublishTime.Time:"null"}</td>
                                     <td>${value.DeliveryAttempt.Valid?value.DeliveryAttempt.Int32:"null"}</td>

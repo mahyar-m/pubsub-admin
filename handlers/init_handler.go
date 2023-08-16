@@ -9,6 +9,8 @@ import (
 	pubsubHelper "github.com/mahyar-m/pubsub-admin/pubsub"
 
 	"cloud.google.com/go/pubsub"
+	"github.com/mahyar-m/pubsub-admin/proto"
+	gProto "google.golang.org/protobuf/proto"
 )
 
 type InitHandler struct {
@@ -41,7 +43,16 @@ func (h *InitHandler) Handle(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Error:", err)
 	}
 
-	err = pubsubHelper.Publish(pubsubConfig, "test-topic", "test message")
+	messageData := &proto.MessageData{
+		Id:   1,
+		Name: "Test name",
+	}
+	msg, err := gProto.Marshal(messageData)
+	if err != nil {
+		fmt.Println("proto.Marshal err:", err)
+	}
+
+	err = pubsubHelper.Publish(pubsubConfig, "test-topic", msg)
 	if err != nil {
 		fmt.Println("Publish Error:", err)
 	}

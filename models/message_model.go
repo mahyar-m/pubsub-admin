@@ -9,6 +9,8 @@ import (
 	"cloud.google.com/go/pubsub"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
+	"github.com/mahyar-m/pubsub-admin/proto"
+	gProto "google.golang.org/protobuf/proto"
 )
 
 type MessageModel struct {
@@ -19,6 +21,7 @@ type MessageRow struct {
 	MessageId       sql.NullString
 	Subscription    sql.NullString
 	Data            sql.NullString
+	DecodedData     sql.NullString
 	Attribute       sql.NullString
 	PublishTime     sql.NullTime
 	DeliveryAttempt sql.NullInt32
@@ -47,7 +50,7 @@ func (messageModel *MessageModel) Select(config db.MysqlConfig, selectQuery stri
 
 	for rows.Next() {
 		var message MessageRow
-		if err := rows.Scan(&message.Uuid, &message.MessageId, &message.Subscription, &message.Data, &message.Attribute, &message.PublishTime, &message.DeliveryAttempt, &message.OrderingKey); err != nil {
+		if err := rows.Scan(&message.Uuid, &message.MessageId, &message.Subscription, &message.Data, &message.DecodedData, &message.Attribute, &message.PublishTime, &message.DeliveryAttempt, &message.OrderingKey); err != nil {
 			return nil, err
 		}
 		messageRows = append(messageRows, message)
@@ -68,7 +71,7 @@ func (messageModel *MessageModel) Insert(config db.MysqlConfig, subID string, ms
 		return err
 	}
 
-	stmtIns, err := db.Prepare("INSERT INTO message (uuid, message_id, subscription, data, attribute, publish_time, delivery_attempt, ordering_key) VALUES(?, ?, ?, ?, ?, ?, ?, ?)")
+	stmtIns, err := db.Prepare("INSERT INTO message (uuid, message_id, subscription, data, decoded_data, attribute, publish_time, delivery_attempt, ordering_key) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		return err
 	}
@@ -78,7 +81,18 @@ func (messageModel *MessageModel) Insert(config db.MysqlConfig, subID string, ms
 	if msg.Attributes != nil {
 		attributes, _ = json.Marshal(msg.Attributes)
 	}
-	_, err = stmtIns.Exec(uuid.New().String(), msg.ID, subID, msg.Data, attributes, msg.PublishTime, msg.DeliveryAttempt, msg.OrderingKey)
+
+	messageData := &proto.MessageData{}
+	if err := gProto.Unmarshal(msg.Data, messageData); err != nil {
+		return err
+	}
+
+	messageDataJson, _ := json.Marshal(messageData)
+	if err != nil {
+		return err
+	}
+
+	_, err = stmtIns.Exec(uuid.New().String(), msg.ID, subID, msg.Data, messageDataJson, attributes, msg.PublishTime, msg.DeliveryAttempt, msg.OrderingKey)
 	if err != nil {
 		return err
 	}
