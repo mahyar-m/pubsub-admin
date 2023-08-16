@@ -21,7 +21,7 @@ type SubscriptionPolicyHandler struct {
 }
 
 func (sph *SubscriptionPolicyHandler) Handle(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "post" {
+	if r.Method == "POST" {
 		sph.postHandle(w, r)
 	} else {
 		sph.getHandle(w, r)
@@ -30,15 +30,16 @@ func (sph *SubscriptionPolicyHandler) Handle(w http.ResponseWriter, r *http.Requ
 
 func (sph *SubscriptionPolicyHandler) postHandle(w http.ResponseWriter, r *http.Request) {
 	pubsubConfig := pubsubHelper.PubsubConfig{}
-	subId := r.FormValue("sub_id")
+	params := router.RequestParams(r)
+	subId := params["sub_id"]
 
-	minimumBackoff, err := strconv.ParseInt(r.FormValue("min_back_off"), 10, 64)
+	minimumBackoff, err := strconv.ParseInt(r.FormValue("MinimumBackoff"), 10, 64)
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 
-	maximumBackoff, err := strconv.ParseInt(r.FormValue("max_back_off"), 10, 64)
+	maximumBackoff, err := strconv.ParseInt(r.FormValue("MaximumBackoff"), 10, 64)
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -50,7 +51,7 @@ func (sph *SubscriptionPolicyHandler) postHandle(w http.ResponseWriter, r *http.
 		return
 	}
 
-	jsonResponse, _ := json.Marshal("")
+	jsonResponse, _ := json.Marshal("success")
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResponse)
 }

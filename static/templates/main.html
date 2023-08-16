@@ -482,9 +482,41 @@
                         }
                     });
                 })
-            });
 
-            // 
+                $('#update-sub-policy-button').on('click', function () {
+                    curr_sub = $('#current-sub').val()
+                    if (!curr_sub) {
+                        $('#sub-policy-result-count').html(
+                            "<span style=\"color:red\">Sub is required!</span>");
+                        return
+                    }
+
+                    $('#sub-policy-result-count').html("<span style=\"color:blue\">Updating</span>");
+                    $("#sub-policy-preloader").addClass("active")
+                    $.ajax({
+                        type: 'POST',
+                        url: `/sub/${curr_sub}/sub_policy`,
+                        data: {
+                            MinimumBackoff: $("#minimum-backoff").val(),
+                            MaximumBackoff: $("#maximum-backoff").val()
+                        },
+                        success: function (data) {
+                            console.log(data)
+                            $('#sub-policy-result-count').html(
+                                "<span style=\"color:green\">Update was succesfull!</span>"
+                            );
+                        },
+                        error: function (data) {
+                            console.log(data)
+                            $('#sub-policy-result-count').html(
+                                "<span style=\"color:red\">Update failed!</span>");
+                        },
+                        complete: function () {
+                            $("#sub-policy-preloader").removeClass("active")
+                        }
+                    });
+                })
+            });
 
             const clearSelect = function (selectElement) {
                 selectElement.find('option').not(':first').remove();
