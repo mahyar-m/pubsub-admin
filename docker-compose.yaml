@@ -1,0 +1,34 @@
+version: "3.3"
+services:
+  pub-sub-emulator:
+    image: google/cloud-sdk:latest
+    command: ["gcloud", "beta", "emulators", "pubsub", "start", "--host-port=0.0.0.0:8085", "--project=test"]
+    ports:
+      - "8085:8085"
+  database:
+    image: mysql:5.7.22
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_DATABASE: golang-docker
+    container_name: golang-docker-db
+    ports:
+      - 3306:3306
+    volumes:
+      - golang-docker-data:/var/lib/mysql
+  pma:
+    image: phpmyadmin/phpmyadmin
+    depends_on:
+      - database
+    ports:
+      - 5003:80
+    environment:
+      - 'PMA_HOST=database'
+      - 'PMA_PORT=3306'
+    container_name: golang-docker-pma
+
+
+# persisted storage
+volumes:
+  golang-docker-data:            

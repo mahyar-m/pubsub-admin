@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Pub/Sub</title>
+    <!--Import Google Icon Font-->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!--Import materialize.css-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <!--Let browser know website is optimized for mobile-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        #current-sub-wrapper {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col s12">
+                <p>PubSub Manager</p>
+            </div>
+        </div>
+        <form method="post" action="#" class="col s12" id="pull_form">
+            <div class="row">
+                <div class="col s6 input-field">
+                    Topic:
+                </div>
+                <div class="col s6 input-field">
+                    <select name="topic" id="topic" required="required">
+                        <option value="" disabled selected>Choose a topic</option>
+                        {{ range $_, $topic := .Topics }}
+                        <option value="{{ $topic.ID }}">{{ $topic.ID }}</option>
+                        {{ end }}
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col s6 input-field">
+                    Sub:
+                </div>
+                <div class="col s3 input-field">
+                    <label>
+                        <input type="checkbox" id="current-sub-chk-box" />
+                        <span>Current Sub</span>
+                    </label>
+                </div>
+                <div class="col s3 input-field" id="current-sub-wrapper">
+                    <select name="current-sub" id="current-sub" required="required">
+                        <option value="" disabled selected>Choose a sub</option>
+                    </select>
+                </div>
+            </div>
+    </div>
+    <div class="row">
+        <div class="input-field col s12 center-align">
+            <button type="submit" class="btn waves-effect waves-light">Pull</button>
+        </div>
+    </div>
+    </form>
+    <div class="divider"></div>
+    <div class="row">
+        <div class="col s6 input-field">
+            Query:
+        </div>
+        <div class="col s6 input-field">
+            <label>
+                <textarea id="query" class="materialize-textarea" cols="50">SELECT * FROM `message`</textarea>
+            </label>
+        </div>
+    </div>
+    <div class="row">
+        <div class="input-field col s12 center-align">
+            <button id="query-button" type="button" class="btn waves-effect waves-light">Query</button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col s10 offset-s1">
+            <table class="striped" id="data-table">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Sub</th>
+                        <th>Data</th>
+                        <th>Attribute</th>
+                        <th>Publish Time</th>
+                        <th>Delivery Attempts</th>
+                        <th>OrderingKey</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!--JavaScript at end of body for optimized loading-->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('select').formSelect();
+
+            $('#topic').on('change', function () {
+                curr_topic = $('select#topic').val()
+                console.log(curr_topic)
+                var selectElement = document.getElementById('current-sub');
+                if (!curr_topic) {
+                    clearSelect($('#current-sub'))
+                    return
+                }
+
+                $.ajax({
+                    type: "GET",
+                    url: "/sub",
+                    data: {
+                        topic_id: curr_topic
+                    },
+                    success: function (data) {
+                        console.log(data)
+                        if (!data.length) {
+                            clearSelect($('#current-sub'))
+                            return
+                        }
+                        Object.entries(data).forEach((entry) => {
+                            const [key, value] = entry;
+                            selectElement.add(new Option(value.id, value.id));
+                        });
+
+                        $('#current-sub').formSelect();
+                    },
+                    error: function () {
+                        console.log('it broke');
+                        selectElement.find('option').not(':first').remove();
+                    },
+                    complete: function () {
+                        console.log('it completed');
+                    }
+                });
+
+            });
+
+            $('#current-sub-chk-box').on('change', function () {
+                if (!this.checked) {
+                    $("#current-sub-wrapper").hide()
+                } else {
+                    $("#current-sub-wrapper").show()
+                }
+            })
+
+            $("#pull_form").submit(function (e) {
+                e.preventDefault();
+                curr_sub = $('select#current-sub').val()
+
+                $.ajax({
+                    type: 'POST',
+                    url: "pull",
+                    data: {
+                        sub_id: curr_sub
+                    },
+                    success: function (data) {
+                        console.log(data)
+                        console.log('pull success');
+                    },
+                    error: function (data) {
+                        console.log(data)
+                        console.log('pull broken');
+                    }
+                });
+            });
+
+            $('#query-button').on('click', function () {
+                curr_sub = $('select#current-sub').val()
+                query = $('#query').val()
+
+                $.ajax({
+                    type: 'GET',
+                    url: "query",
+                    data: {
+                        sub_id: curr_sub,
+                        query: query
+                    },
+                    success: function (data) {
+                        console.log(data)
+                        console.log('query success');
+                        table = $('#data-table')
+                        $('#data-table tbody').empty();
+                        Object.entries(data).forEach((entry) => {
+                            const [key, value] = entry;
+                            table.find('tbody').append(
+                                `<tr><td>${value.Id}</td>
+                                    <td>${value.Sub}</td>
+                                    <td>${value.Data.Valid?value.Data.String:"null"}</td>
+                                    <td>${value.Attribute.Valid?value.Attribute.String:"null"}</td>
+                                    <td>${value.PublishTime.Valid?value.PublishTime.Time:"null"}</td>
+                                    <td>${value.DeliveryAttempt.Valid?value.DeliveryAttempt.Int32:"null"}</td>
+                                    <td>${value.OrderingKey.Valid?value.OrderingKey.String:"null"}</td>
+                                </tr>`
+                            );
+                        });
+                    },
+                    error: function (data) {
+                        console.log(data)
+                        console.log('query broken');
+                    }
+                });
+            })
+        });
+
+        const clearSelect = function (selectElement) {
+            selectElement.find('option').not(':first').remove();
+            selectElement.formSelect();
+        }
+    </script>
+</body>
+
+</html>
