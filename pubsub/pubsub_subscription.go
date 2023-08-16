@@ -33,7 +33,7 @@ func ListSubscriptions(config PubsubConfig, topicID string) ([]*pubsub.Subscript
 	return subs, nil
 }
 
-func CreateSub(config PubsubConfig, subID string, topicID string) error {
+func CreateSub(config PubsubConfig, subID string, topicID string, retryPolicy *pubsub.RetryPolicy) error {
 	ctx := context.Background()
 	client, err := pubsub.NewClient(ctx, config.GetProjectId())
 	if err != nil {
@@ -44,7 +44,8 @@ func CreateSub(config PubsubConfig, subID string, topicID string) error {
 	topic := client.Topic(topicID)
 
 	sub, err := client.CreateSubscription(ctx, subID, pubsub.SubscriptionConfig{
-		Topic: topic,
+		Topic:       topic,
+		RetryPolicy: nil,
 	})
 	if err != nil {
 		return fmt.Errorf("CreateSubscription: %v", err)

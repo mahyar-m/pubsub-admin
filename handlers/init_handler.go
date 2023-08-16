@@ -5,6 +5,9 @@ import (
 	pubsubHelper "example/pubsub_manager/pubsub"
 	"fmt"
 	"net/http"
+	"time"
+
+	"cloud.google.com/go/pubsub"
 )
 
 type InitHandler struct {
@@ -18,11 +21,21 @@ func (h *InitHandler) Handle(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Error:", err)
 	}
 
-	err = pubsubHelper.CreateSub(pubsubConfig, "test-sub", "test-topic")
+	err = pubsubHelper.CreateSub(pubsubConfig, "test-sub", "test-topic", nil)
 	if err != nil {
 		fmt.Println("Error:", err)
 	}
-	err = pubsubHelper.CreateSub(pubsubConfig, "test-sub1", "test-topic")
+	err = pubsubHelper.CreateSub(pubsubConfig, "test-sub1", "test-topic", nil)
+	if err != nil {
+		fmt.Println("Error:", err)
+	}
+
+	retryPolicy := &pubsub.RetryPolicy{MinimumBackoff: 5 * time.Second, MaximumBackoff: 60 * time.Second}
+	// pubsubHelper.DeleteSub(pubsubConfig, "test-sub-with-retry")
+	// if err != nil {
+	// 	fmt.Println("Error:", err)
+	// }
+	err = pubsubHelper.CreateSub(pubsubConfig, "test-sub-with-retry", "test-topic", retryPolicy)
 	if err != nil {
 		fmt.Println("Error:", err)
 	}
