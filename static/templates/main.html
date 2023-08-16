@@ -121,7 +121,7 @@
                     &nbsp;
                 </div>
                 <div class="input-field col s1 center-align">
-                    <button type="submit" class="btn waves-effect waves-light">Pull</button>
+                    <button type="button" class="btn waves-effect waves-light" id="pull-button">Pull</button>
                 </div>
                 <div class="input-field col s1 center-align">
                     <div class="preloader-wrapper small" id="pull-preloader">
@@ -251,8 +251,7 @@
                     }
                 })
 
-                $("#pull_form").submit(function (e) {
-                    e.preventDefault();
+                $('#pull-button').on('click', function () {
                     curr_sub = $('#current-sub').val()
                     if (!curr_sub) {
                         $('#pull-result-count').html(
@@ -350,7 +349,7 @@
                     $('#init-result-count').html("<span style=\"color:blue\">Initializing</span>");
                     $("#init-preloader").addClass("active")
                     $.ajax({
-                        type: 'GET',
+                        type: 'POST',
                         url: "init",
                         data: {},
                         success: function (data) {
