@@ -27,7 +27,13 @@ func (h *PullHandler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	messageRecievedCount, err := pubsubHelper.Pull(pubsubConfig, subId, int(timeout), int(limit))
+	isAck, err := strconv.ParseBool(r.FormValue("is_ack"))
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	messageRecievedCount, err := pubsubHelper.Pull(pubsubConfig, subId, int(timeout), int(limit), isAck)
 	if err != nil {
 		log.Fatal(err)
 	}

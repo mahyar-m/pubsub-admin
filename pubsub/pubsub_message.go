@@ -40,7 +40,7 @@ func Publish(config PubsubConfig, topicID, msg string) error {
 	return nil
 }
 
-func Pull(config PubsubConfig, subID string, timeout int, limit int) (int, error) {
+func Pull(config PubsubConfig, subID string, timeout int, limit int, isAck bool) (int, error) {
 	client, sub, err := GetSub(config, subID)
 	if err != nil {
 		return 0, err
@@ -66,15 +66,28 @@ func Pull(config PubsubConfig, subID string, timeout int, limit int) (int, error
 	var received int32
 	err = sub.Receive(ctx, func(_ context.Context, msg *pubsub.Message) {
 		mutex.Lock()
-		log.Printf("Got message: %q\n", string(msg.Data))
-
-		err := messageModel.Insert(dbConfig, subID, msg)
+		log.Printf("Got message with ID: %q, and Data:%q \n", msg.ID, string(msg.Data))
+		isDuplicate, err := messageModel.IsDuplicate(dbConfig, subID, msg)
 		if err != nil {
 			panic(err.Error())
 		}
 
-		atomic.AddInt32(&received, 1)
-		msg.Ack()
+		if !isDuplicate {
+			err := messageModel.Insert(dbConfig, subID, msg)
+			if err != nil {
+				panic(err.Error())
+			}
+
+			atomic.AddInt32(&received, 1)
+		} else {
+			log.Printf("Duplicate message: %q\n", string(msg.ID))
+		}
+
+		if isAck {
+			msg.Ack()
+		} else {
+			msg.Nack()
+		}
 
 		if limit != 0 && received == int32(limit) {
 			cancel()
